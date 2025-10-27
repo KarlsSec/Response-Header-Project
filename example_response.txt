@@ -1,0 +1,19 @@
+HTTP/2 200 OK
+X-Frame-Options: SAMEORIGIN
+Last-Modified: Mon, 27 Oct 2025 09:05:34 GMT
+Etag: "2c15a-6422033bd94bf-gzip"
+Cache-Control: max-age=3600, s-max-age=3600
+Expires: Mon, 27 Oct 2025 10:18:58 GMT
+X-Vhost: publish
+Access-Control-Allow-Credentials: true
+Content-Type: text/html;charset=utf-8
+X-Content-Type-Options: nosniff
+Accept-Ranges: bytes
+Date: Mon, 27 Oct 2025 10:49:22 GMT
+Age: 2124
+Strict-Transport-Security: max-age=31557600
+X-Served-By: cache-lhr-egll1980027-LHR
+X-Cache: HIT
+X-Timer: S1761562163.781740,VS0,VS0,VE1
+Vary: Accept-Encoding,Origin
+Content-Length: 180570
