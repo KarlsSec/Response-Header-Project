@@ -6,6 +6,6 @@ Made with Python 3.10.12
 
 # how to run:
 save burp response headers into <file.txt>
-python3 headers.py <file.txt>
+python3 headers.py <file.txt> <csvname>
 
 Note: Clear-site-data is only valid on logout process. 
