@@ -1,52 +1,55 @@
 #!/usr/bin/env python3
-#Example usage: python3 headers.py <file> <csv_output_file>
+#Example usage: python3 headers_remote.py <url> <csv_output_file>
 import sys # cli arg
 import csv
 import data_oct_2025
+import requests
+requests.packages.urllib3.disable_warnings()
 
+# Turn off requests internal logging
+import logging
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 def main():
     if len(sys.argv) != 3:
-        print("Usage: python3 headers.py <file> <csv_output_file>")
+        print("Usage: python3 headers_local.py <url> <csv_output_file>")
         sys.exit(1)
-    filename = sys.argv[1]
+    url = sys.argv[1]
     csv_output_file = sys.argv[2]
-
-# Parse the headers from the input file
-    headers = parse_headers(filename)
+# Make HTTP request to get headers
+    response_headers = httpquery(url)
+    
 # Get the expected headers from the data_oct_2025 module
     expected = data_oct_2025.expected
-
-
     
 # Validate the headers and print the report
-    report, missing_headers = validate_headers(headers, expected)
+    report, missing_headers = validate_headers(response_headers, expected)
     print(report)
-    # Get the header descriptions for the CSV
     
+    
+
+# csv output for missing headers
     csvoutput1 = get_header_description(missing_headers)
     csvoutput2 = get_header_recommendations(missing_headers)
     
     write_csv(csv_output_file + "_descriptions.csv", csvoutput1)
     write_csv(csv_output_file + "_recommendations.csv", csvoutput2)
-    
-    
-def parse_headers(filename):
-    headers = {}
-    with open(filename, 'r') as file:
-        lines = []
-        for line_num, line in enumerate(file, 1):
-            line = line.strip()
-            if not line:
-                break
-            if line_num == 1:
-                print(f"Status Line: {line}")
-                continue
-            if ': ' in line:
-                key, value = line.split(': ', 1)
-                headers[key.lower().strip()] = value.strip()
-    return headers
+
+#get only the header descriptions for the missing headers
+def httpquery(url):
+    striped_headers = []
+    try:
+        response = requests.get(url)
+    except requests.RequestException as e:
+        print(f"Error fetching URL {url}: {e}")
+        sys.exit(1)
         
+    for key, value in response.headers.items():
+        lowered_key = key.lower().strip()
+        striped_headers.append(lowered_key)
+    return striped_headers
+
 def validate_headers(headers, expected):
 
     issues = []
@@ -75,6 +78,7 @@ def validate_headers(headers, expected):
         report = "PASS: All expected headers match."
     return report, missing
 
+
 def get_header_description(headers):
     headerdesc = ["Header, Description"]
     for x in headers:
@@ -102,7 +106,5 @@ def write_csv(filename, data):
             else:
                 writer.writerow([line])  # fallback
 
-
 if __name__ == "__main__":
     main()
-
