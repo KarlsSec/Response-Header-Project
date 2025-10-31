@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-#Example usage: python3 headers_remote.py <url> <csv_output_file>
+#Example usage: python3 headers_remote.py <url> <csv_output_file> [--cookie "cookie_string"] 
+# if using cookie flag make sure WAF is disabled for accurate results
 import sys # cli arg
 import csv
 import data_oct_2025
 import requests
+import argparse
 requests.packages.urllib3.disable_warnings()
 
 # Turn off requests internal logging
@@ -12,13 +14,32 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 def main():
-    if len(sys.argv) != 3:
-        print("Usage: python3 headers_local.py <url> <csv_output_file>")
-        sys.exit(1)
-    url = sys.argv[1]
-    csv_output_file = sys.argv[2]
+    parser = argparse.ArgumentParser(description="Fetch HTTP headers from a URL and validate them against expected security headers.")
+    
+    #required url argument
+    parser.add_argument("url", help="The URL to fetch headers from.")
+    #optional csv output file argument
+    parser.add_argument(
+        'csv_output_file',
+        nargs='?',
+        default='report.csv',
+        help="The base name for the CSV output files (default: report.csv)."
+    )
+    #optinal cookie argument
+    parser.add_argument(
+        '--cookie',
+        type=str,
+        default=None,
+        help="Optional cookie string to include in the request. (e.g., \"sessionid=abc123\")"
+    )
+    #parse arguments
+    args = parser.parse_args()
+    url = args.url
+    csv_output_file = args.csv_output_file
+    cookie = args.cookie
+        
 # Make HTTP request to get headers
-    response_headers = httpquery(url)
+    response_headers = httpquery(url, cookie)
     
 # Get the expected headers from the data_oct_2025 module
     expected = data_oct_2025.expected
@@ -37,15 +58,16 @@ def main():
     write_csv(csv_output_file + "_recommendations.csv", csvoutput2)
 
 #get only the header descriptions for the missing headers
-def httpquery(url):
+def httpquery(url, cookie=None):
+    request_headers = {'Cookie': cookie} if cookie else {}
     striped_headers = []
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=request_headers)
     except requests.RequestException as e:
-        print(f"Error fetching URL {url}: {e}")
-        sys.exit(1)
-        
-    for key, value in response.headers.items():
+            print(f"Error fetching URL {url} with cookie: {e}")
+            sys.exit(1)
+    
+    for key, _ in response.headers.items():
         lowered_key = key.lower().strip()
         striped_headers.append(lowered_key)
     return striped_headers
